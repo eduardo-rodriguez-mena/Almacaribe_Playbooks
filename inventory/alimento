@@ -1,0 +1,62 @@
+#Server
+vDC1-1 ansible_host=10.1.0.5 
+vDC2-1 ansible_host=10.1.0.6
+vDC3-1 ansible_host=158.220.80.129
+Alimento-DB ansible_host=10.1.0.163
+Alimento-WEB ansible_host=10.1.0.164
+Cloud ansible_host=10.1.0.25
+Hosting ansible_host=10.1.0.20
+management ansible_host=10.1.0.104
+CF-Tun-vDC1 ansible_host=10.1.0.15
+CF-Tun-vDC2 ansible_host=10.1.0.14
+GW1-vDC1 ansible_host=10.1.0.11
+GW2-vDC2 ansible_host=10.1.0.10
+
+[all:vars]
+ansible_connection=ssh
+ansible_user=root
+ansible_ssh_private_key_file=/home/eduardo/.ssh/id_rsa
+
+[pm-hosts]
+vDC1-1
+vDC2-1
+
+[pm-dr]
+vDC3-1
+
+[odoo-web]
+Alimento-WEB
+
+[odoo-db]
+Alimento-DB
+
+[tunnels]
+CF-Tun-vDC1
+CF-Tun-vDC2
+
+[pfsense-vms]
+GW1-vDC1
+GW2-vDC2
+
+[debian-hosts]
+Alimento-DB
+Alimento-WEB
+Cloud
+Hosting
+CF-Tun-vDC1
+CF-Tun-vDC2
+management
+
+[vDC1_Res]
+Cloud
+management
+CF-Tun-vDC1
+GW1-vDC1
+
+[vDC2_Res]
+Alimento-DB
+Alimento-WEB
+Hosting
+CF-Tun-vDC2
+GW2-vDC2
+

@@ -1,0 +1,95 @@
+---
+- name: Actualización segura de servidores Debian/Ubuntu
+  hosts: debian-hosts # Reemplaza con tu grupo de hosts de Debian/Ubuntu
+  become: true # Necesario para ejecutar operaciones de actualización de paquetes
+
+  vars:
+    # Deshabilita la recolección de hechos por defecto si no es estrictamente necesaria
+    # para acelerar un poco el proceso.
+    ansible_facts_action: 'gather' # Puedes cambiar a 'skip' si no necesitas hechos en este playbook.
+
+    # Opciones de APT
+    apt_autoremove: true
+    apt_autoclean: true
+    apt_upgrade_type: dist # O 'full', o 'safe'. 'dist' es para actualizaciones de distribución. 'safe' es más conservador.
+                            # 'full' es un alias para 'dist-upgrade' en muchas versiones recientes.
+                            # Para actualizaciones de seguridad puras, 'safe' es el más conservador.
+                            # Para actualizaciones completas del sistema (kernel, etc.), 'dist' es común.
+
+    # Opciones de reinicio
+    reboot_required_file: /var/run/reboot-required
+    reboot_timeout: 600 # Segundos antes de que Ansible considere que el reinicio falló
+
+  tasks:
+    - name: Pre-chequeo - Verificar si el sistema ya requiere un reinicio
+      ansible.builtin.stat:
+        path: "{{ reboot_required_file }}"
+      register: reboot_file_status
+      changed_when: false # No cambia el sistema, solo consulta
+
+    - name: Advertencia si se requiere un reinicio pendiente
+      ansible.builtin.debug:
+        msg: "ADVERTENCIA: El servidor {{ inventory_hostname }} ya tiene un reinicio pendiente antes de las actualizaciones. Considere reiniciar primero."
+      when: reboot_file_status.stat.exists
+
+    - name: Actualizar el caché de paquetes APT e instalar actualizaciones de seguridad
+      ansible.builtin.apt:
+        update_cache: true # Equivalente a 'apt update'
+        upgrade: "{{ apt_upgrade_type }}" # Realiza la actualización (safe, dist, full)
+        force_apt_get: true # Fuerza el uso de apt-get para evitar problemas de dependencia
+      register: apt_update_result
+      notify: Check for reboot # Notificar al handler para verificar el reinicio
+
+    - name: Mostrar resumen de la actualización
+      ansible.builtin.debug:
+        msg: |
+          Actualización en {{ inventory_hostname }}:
+          - Éxito: {{ apt_update_result.changed }}
+          - Mensajes: {{ apt_update_result.msg | default('N/A') }}
+          - Paquetes instalados: >-
+              {{
+                apt_update_result.stdout.split('\n')
+                | select('match', '^newly installed')
+                | list
+                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
+              }}
+          - Paquetes actualizados: >-
+              {{
+                apt_update_result.stdout.split('\n')
+                | select('match', '^upgraded')
+                | list
+                | join('\n  - ')
+                if apt_update_result.stdout is defined else 'N/A'
+              }}
+          - Paquetes eliminados: >-
+              {{
+                apt_update_result.stdout.split('\n')
+                | select('match', '^to remove')
+                | list
+                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
+              }}
+          - Paquetes pendientes: >-
+              {{
+                apt_update_result.stdout.split('\n')
+                | select('match', '^not upgradee¡d')
+                | list
+                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
+              }}
+
+    - name: Eliminar paquetes obsoletos y limpiar el caché de APT
+      ansible.builtin.apt:
+        autoremove: "{{ apt_autoremove }}"
+        autoclean: "{{ apt_autoclean }}"
+
+  handlers:
+    - name: Verificar si se requiere un reinicio y ejecutarlo si es necesario
+      ansible.builtin.stat:
+        path: "{{ reboot_required_file }}"
+      register: reboot_status
+      listen: "Check for reboot" # Escucha la notificación de la tarea de actualización
+
+    - name: Reiniciar el servidor si se requiere
+      ansible.builtin.reboot:
+        reboot_timeout: "{{ reboot_timeout }}"
+      when: reboot_status.stat.exists # Solo reiniciar si el archivo existe
+      listen: "Check for reboot" # Escucha la notificación de la tarea de actualización

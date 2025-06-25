@@ -1,0 +1,20 @@
+---
+- name: Verificar actualizaciones pendientes en sistemas Debian
+  hosts: all # Reemplaza con tu grupo de hosts de Debian/Ubuntu
+  become: true # Necesario para ejecutar 'apt update'
+
+  tasks:
+    - name: Actualizar el caché de paquetes APT
+      ansible.builtin.apt:
+        update_cache: true
+      changed_when: false # Esta tarea no cambia el sistema, solo actualiza el caché
+
+    - name: Obtener la lista de paquetes actualizables
+      ansible.builtin.command: apt list --upgradable
+      register: upgradable_packages
+      changed_when: false # Esta tarea no cambia el sistema, solo obtiene información
+
+    - name: Mostrar los paquetes con actualizaciones pendientes
+      ansible.builtin.debug:
+        msg: "Los siguientes paquetes tienen actualizaciones pendientes:\n{{ upgradable_packages.stdout }}"
+      when: upgradable_packages.stdout is defined and upgradable_packages.stdout | length > 0
