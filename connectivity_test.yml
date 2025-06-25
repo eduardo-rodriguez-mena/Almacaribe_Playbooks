@@ -1,6 +1,6 @@
 ---
 - name: Test connectivity
-  hosts: all
+  hosts: debian-hosts # Replace with your Debian/Ubuntu host group
   tasks:
     - name: Test connectivity
       ansible.builtin.ping:
