@@ -1,6 +1,6 @@
 ---
 - name: Verificar actualizaciones pendientes en sistemas Debian
-  hosts: all # Reemplaza con tu grupo de hosts de Debian/Ubuntu
+  hosts: debian-hosts:pm-hosts:pm-dr # Reemplaza con tu grupo de hosts de Debian/Ubuntu
   become: true # Necesario para ejecutar 'apt update'
 
   tasks:
