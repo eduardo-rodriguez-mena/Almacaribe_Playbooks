@@ -1,6 +1,9 @@
 ---
 - name: Test connectivity
   hosts: debian-hosts # Replace with your Debian/Ubuntu host group
+  gather_facts: false
+
   tasks:
     - name: Test connectivity
       ansible.builtin.ping:
+      changed_when: false

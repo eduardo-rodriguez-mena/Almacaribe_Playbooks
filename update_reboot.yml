@@ -1,6 +1,6 @@
 ---
 - name: Actualización segura de servidores Debian/Ubuntu
-  hosts: debian-hosts # Reemplaza con tu grupo de hosts de Debian/Ubuntu
+  hosts: management # Reemplaza con tu grupo de hosts de Debian/Ubuntu
   become: true # Necesario para ejecutar operaciones de actualización de paquetes
 
   vars:
@@ -45,36 +45,7 @@
         msg: |
           Actualización en {{ inventory_hostname }}:
           - Éxito: {{ apt_update_result.changed }}
-          - Mensajes: {{ apt_update_result.msg | default('N/A') }}
-          - Paquetes instalados: >-
-              {{
-                apt_update_result.stdout.split('\n')
-                | select('match', '^newly installed')
-                | list
-                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
-              }}
-          - Paquetes actualizados: >-
-              {{
-                apt_update_result.stdout.split('\n')
-                | select('match', '^upgraded')
-                | list
-                | join('\n  - ')
-                if apt_update_result.stdout is defined else 'N/A'
-              }}
-          - Paquetes eliminados: >-
-              {{
-                apt_update_result.stdout.split('\n')
-                | select('match', '^to remove')
-                | list
-                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
-              }}
-          - Paquetes pendientes: >-
-              {{
-                apt_update_result.stdout.split('\n')
-                | select('match', '^not upgradee¡d')
-                | list
-                | join('\n  - ') if apt_update_result.stdout is defined else 'N/A'
-              }}
+          - Mensajes: "{{ apt_update_result.msg.split('\n') }}"
 
     - name: Eliminar paquetes obsoletos y limpiar el caché de APT
       ansible.builtin.apt:

@@ -1,0 +1,84 @@
+---
+- name: Tomar snapshots de VMs y CTs en nodos Proxmox
+  hosts: vDC1-1
+  gather_facts: false # No necesitamos recopilar hechos para esta tarea
+  become: false      # No necesitamos sudo, ya que nos conectamos como root
+
+  vars:
+    # Definir el nombre del snapshot y la descripción dinámicamente
+    snapshot_base_name: "Ansible_snapshot_Temp_Update"
+    current_datetime: "{{ now(fmt='%Y%m%d_%H%M%S') }}"
+    snapshot_name: "{{ snapshot_base_name }}"
+    snapshot_description: "Snapshot creado por Ansible el {{ now(fmt='%Y-%m-%d %H:%M:%S') }}."
+
+   # --- Importar el archivo de variables aquí ---
+  vars_files:
+    - variables/vdc1-1_snap_vmids.yml
+  # ---------------------------------------------
+
+  tasks:
+    # - name: Tomar snapshot de cada VM
+    #   ansible.builtin.shell: |
+    #     set -euo pipefail
+    #     VMID="{{ item }}"
+    #     if [[ "$VMID" =~ ^[0-9]+$ ]]; then
+    #       # Comprobar si el snapshot ya existe
+    #       if  qm listsnapshot "$VMID" | grep -q "{{ snapshot_name }}"; then
+    #         echo "El snapshot '{{ snapshot_name }}' ya existe para VM $VMID. Eliminando..."
+    #         qm delsnapshot "$VMID" "{{ snapshot_name }}"
+    #       fi
+    #       echo "Creando snapshot '{{ snapshot_name }}' para VM $VMID..."
+    #       qm snapshot "$VMID" "{{ snapshot_name }}" --description "{{ snapshot_description }} - VM $VMID" --vmstate true
+    #       echo "Snapshot exitoso para VM $VMID."
+    #     else
+    #       echo "Saltando línea no válida en la lista de VMs: {{ item }}"
+    #     fi
+    #   loop: "{{ specific_vm_ids }}"
+    #   loop_control:
+    #     loop_var: item
+    #   args:
+    #     chdir: /root
+    #     executable: /bin/bash
+    #   register: vm_snapshot_result
+    #   changed_when: "'Creando snapshot' in vm_snapshot_result.stdout"
+    #   failed_when: "'ERROR' in vm_snapshot_result.stderr or 'Error:' in vm_snapshot_result.stderr"
+    #   when: specific_vm_ids is defined and specific_vm_ids | length > 0
+
+    # - name: Mostrar resultados de los snapshots de VMs
+    #   ansible.builtin.debug:
+    #     msg: "{{ item.stdout }}" # Para ver la salida de cada snapshot
+    #   loop: "{{ vm_snapshot_result.results }}"
+    #   when: vm_snapshot_result.results is defined and vm_snapshot_result.results | length > 1
+
+    - name: Tomar snapshot de cada CT
+      ansible.builtin.shell: |
+        set -euo pipefail
+        CTID="{{ item }}"
+        if [[ "$CTID" =~ ^[0-9]+$ ]]; then
+          # Comprobar si el snapshot ya existe
+          if pct listsnapshot "$CTID" | grep -q "{{ snapshot_name }}"; then
+            echo "El snapshot '{{ snapshot_name }}' ya existe para CT $CTID. Eliminando..."
+            pct delsnapshot "$CTID" "{{ snapshot_name }}"
+          fi
+          echo "Creando snapshot '{{ snapshot_name }}' para CT $CTID..."
+          pct snapshot "$CTID" "{{ snapshot_name }}" --description "{{ snapshot_description }} - CT $CTID"
+          echo "Snapshot exitoso para CT $CTID."
+        else
+          echo "Saltando línea no válida en la lista de CTs: {{ item }}"
+        fi
+      loop: "{{ specific_ct_ids }}"
+      loop_control:
+        loop_var: item
+      when: specific_ct_ids is defined and specific_ct_ids | length > 0
+      args:
+        chdir: /root
+        executable: /bin/bash
+      register: ct_snapshot_result
+      changed_when: "'Creando snapshot' in ct_snapshot_result.stdout"
+      failed_when: "'ERROR' in ct_snapshot_result.stderr or 'Error:' in ct_snapshot_result.stderr"
+
+    # - name: Mostrar resultados de los snapshots de CTs
+    #   ansible.builtin.debug:
+    #     msg: "{{ item }}"
+    #   loop: "{{ ct_snapshot_result.results }}"
+    #   when: ct_snapshot_result.results is defined

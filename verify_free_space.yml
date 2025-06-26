@@ -2,6 +2,7 @@
 - name: Obtener disponibilidad de espacio en disco
   hosts: all # Reemplaza con el nombre de tu grupo de hosts o 'all'
   become: false # df -h generalmente no requiere privilegios de sudo, a menos que necesites ver puntos de montaje restringidos
+  gather_facts: false # No es necesario recopilar hechos para esta tarea
 
   tasks:
     - name: Ejecutar df -h para ver el espacio en disco

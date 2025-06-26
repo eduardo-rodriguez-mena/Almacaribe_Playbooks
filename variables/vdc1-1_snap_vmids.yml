@@ -1,0 +1,14 @@
+  # --- DEFINICIÓN DE LAS LISTAS DE IDs ESPECÍFICAS ---
+    specific_vm_ids:
+      - none # no eliminar esta línea, es un marcador de posición 
+      - 100 
+      # Agrega todos los VMIDs que desees aquí
+
+    specific_ct_ids:
+      - 101  # Ejemplo: ID de CT 1
+      - 102  # Ejemplo: ID de CT 2
+      - 103  # Ejemplo: ID de CT 3
+      - 104  # Ejemplo: ID de CT 4
+      - 106  # Ejemplo: ID de CT 6
+      # Agrega todos los CTIDs que desees aquí
+    # ---------------------------------------------------
