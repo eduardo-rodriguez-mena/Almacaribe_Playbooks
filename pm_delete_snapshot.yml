@@ -45,7 +45,7 @@
       loop: "{{ vm_snapshot_result.results }}"
       when: vm_snapshot_result.results is defined and vm_snapshot_result.results | length > 0
 
-    - name: Tomar snapshot de cada CT
+    - name: Borrar snapshot de cada CT
       ansible.builtin.shell: |
         set -euo pipefail
         CTID="{{ item }}"
