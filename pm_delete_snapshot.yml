@@ -15,35 +15,35 @@
   # ---------------------------------------------
 
   tasks:
-    - name: Borrar snapshot para Update de cada VM
-      ansible.builtin.shell: |
-        set -euo pipefail
-        VMID="{{ item }}"
-        if [[ "$VMID" =~ ^[0-9]+$ ]]; then
-          # Comprobar si el snapshot  existe
-          if  qm listsnapshot "$VMID" | grep -q "{{ snapshot_name }}"; then
-            echo "El snapshot '{{ snapshot_name }}' ya existe para VM $VMID. Eliminando..."
-            qm delsnapshot "$VMID" "{{ snapshot_name }}"
-          fi
-        else
-          echo "Saltando línea no válida en la lista de VMs: {{ item }}"
-        fi
-      loop: "{{ specific_vm_ids }}"
-      loop_control:
-        loop_var: item
-      args:
-        chdir: /root
-        executable: /bin/bash
-      register: vm_snapshot_result
-      changed_when: "'Borrando snapshot' in vm_snapshot_result.stdout"
-      failed_when: "'ERROR' in vm_snapshot_result.stderr or 'Error:' in vm_snapshot_result.stderr"
-      when: specific_vm_ids is defined and specific_vm_ids | length > 1
+    # - name: Borrar snapshot para Update de cada VM
+    #   ansible.builtin.shell: |
+    #     set -euo pipefail
+    #     VMID="{{ item }}"
+    #     if [[ "$VMID" =~ ^[0-9]+$ ]]; then
+    #       # Comprobar si el snapshot  existe
+    #       if  qm listsnapshot "$VMID" | grep -q "{{ snapshot_name }}"; then
+    #         echo "El snapshot '{{ snapshot_name }}' ya existe para VM $VMID. Eliminando..."
+    #         qm delsnapshot "$VMID" "{{ snapshot_name }}"
+    #       fi
+    #     else
+    #       echo "Saltando línea no válida en la lista de VMs: {{ item }}"
+    #     fi
+    #   loop: "{{ specific_vm_ids }}"
+    #   loop_control:
+    #     loop_var: item
+    #   args:
+    #     chdir: /root
+    #     executable: /bin/bash
+    #   register: vm_snapshot_result
+    #   changed_when: "'Borrando snapshot' in vm_snapshot_result.stdout"
+    #   failed_when: "'ERROR' in vm_snapshot_result.stderr or 'Error:' in vm_snapshot_result.stderr"
+    #   when: specific_vm_ids is defined and specific_vm_ids | length > 1
 
-    - name: Mostrar resultados de borrado los snapshots de VMs
-      ansible.builtin.debug:
-        msg: "{{ item.stdout }}" # Para ver la salida de cada snapshot
-      loop: "{{ vm_snapshot_result.results }}"
-      when: vm_snapshot_result.results is defined and vm_snapshot_result.results | length > 0
+    # - name: Mostrar resultados de borrado los snapshots de VMs
+    #   ansible.builtin.debug:
+    #     msg: "{{ item.stdout }}" # Para ver la salida de cada snapshot
+    #   loop: "{{ vm_snapshot_result.results }}"
+    #   when: vm_snapshot_result.results is defined and vm_snapshot_result.results | length > 0
 
     - name: Borrar snapshot de cada CT
       ansible.builtin.shell: |
