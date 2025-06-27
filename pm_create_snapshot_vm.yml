@@ -20,9 +20,9 @@
     - name: Tomar snapshot de cada VM
       ansible.builtin.shell: |
         set -euo pipefail
-        VMID="{{ item.split(' ')[7] }}"
-        VM_STATUS="{{ item.split(' ')[21] }}" # Obtener el estado (columna 3)
-        if [[ "$VMID" =~ ^[0-9]+$ ]]; then
+        VMID="{{ item.split(' ')[1] }}"
+        VM_STATUS="{{ item.split(' ')[3] }}" # Obtener el estado (columna 3)
+        if [[ "$VMID" =~ ^[0-9]+$ && "$VM_STATUS" == "running" ]]; then
           # Comprobar si el snapshot ya existe
           if  qm listsnapshot "$VMID" | grep -q "{{ snapshot_name }}"; then
             echo "El snapshot '{{ snapshot_name }}' ya existe para VM $VMID. Eliminando..."
@@ -34,7 +34,7 @@
         else
           echo "Saltando línea no válida en la lista de VMs: {{ item }}"
         fi
-      loop: "{{ vm_list_output.stdout_lines[1:] }}"
+      loop: "{{ vm_list_output.stdout_lines[1:] | trim | regex_replace('\\s+', ' ') }}"
       loop_control:
         loop_var: item
       args:

@@ -20,7 +20,7 @@
       ansible.builtin.shell: |
         set -euo pipefail
         CTID="{{ item.split(' ')[0] }}"
-        CT_STATUS="{{ item.split(' ')[8] }}" # Obtener el estado (columna 3)
+        CT_STATUS="{{ item.split(' ')[1] }}" # Obtener el estado (columna 2)
         if [[ "$CTID" =~ ^[0-9]+$ ]]; then
           # Comprobar si el snapshot ya existe
           if pct listsnapshot "$CTID" | grep -q "{{ snapshot_name }}"; then
@@ -33,7 +33,7 @@
         else
           echo "Saltando línea no válida en la lista de CTs: {{ item }}"
         fi
-      loop: "{{ ct_list_output.stdout_lines[1:] }}"
+      loop: "{{ ct_list_output.stdout_lines[1:] | trim | regex_replace('\\s+', ' ')}}"
       loop_control:
         loop_var: item
       when: ct_list_output.stdout_lines | length > 1
