@@ -1,5 +1,5 @@
 ---
-- name: Tomar snapshots de VMs y CTs en nodos Proxmox
+- name: Borrar snapshots de VMs y CTs en nodos Proxmox
   hosts: vDC1-1
   gather_facts: false # No necesitamos recopilar hechos para esta tarea
   become: false      # No necesitamos sudo, ya que nos conectamos como root
