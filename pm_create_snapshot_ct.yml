@@ -21,7 +21,7 @@
         set -euo pipefail
         CTID="{{ item.split(' ')[0] }}"
         CT_STATUS="{{ item.split(' ')[1] }}" # Obtener el estado (columna 2)
-        if [[ "$CTID" =~ ^[0-9]+$ ]]; then
+        if [[ "$CTID" =~ ^[0-9]+$ && "$CT_STATUS" == "running" ]]; then
           # Comprobar si el snapshot ya existe
           if pct listsnapshot "$CTID" | grep -q "{{ snapshot_name }}"; then
             echo "El snapshot '{{ snapshot_name }}' ya existe para CT $CTID. Eliminando..."
