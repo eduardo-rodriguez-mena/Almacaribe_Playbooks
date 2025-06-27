@@ -1,6 +1,6 @@
 ---
 - name: Tomar snapshots de VMs en nodos Proxmox
-  hosts: vDC1-1
+  hosts: "{{ update_hosts | default('pm-hosts') }}" # Puedes cambiar 'vDC1-1' por el grupo de hosts que necesites
   gather_facts: false # No necesitamos recopilar hechos para esta tarea
   become: false      # No necesitamos sudo, ya que nos conectamos como root
 

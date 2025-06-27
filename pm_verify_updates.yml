@@ -1,0 +1,11 @@
+---
+- name: Playbook principal para despliegues
+  hosts: localhost # Este play puede correr en localhost o en un host de control
+  connection: local
+  gather_facts: false
+
+  vars:
+    update_hosts: vDC1-1 # Define los hosts donde se ejecutarán las tareas
+
+- name: Ejecutar playbook de verificación de actualizaciones
+  ansible.builtin.import_playbook: list_upgradable.yml

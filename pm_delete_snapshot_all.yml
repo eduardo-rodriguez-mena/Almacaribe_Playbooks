@@ -1,6 +1,6 @@
 ---
 - name: Borrar snapshots de VMs y CTs en nodos Proxmox
-  hosts: vDC1-1
+  hosts: "{{ update_hosts | default('pm-hosts') }}" # Puedes cambiar 'pm-hosts' por el grupo de hosts que necesites
   gather_facts: false # No necesitamos recopilar hechos para esta tarea
   become: false      # No necesitamos sudo, ya que nos conectamos como root
 

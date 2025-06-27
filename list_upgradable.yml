@@ -1,6 +1,6 @@
 ---
 - name: Verificar actualizaciones pendientes en sistemas Debian
-  hosts: pm-hosts:pm-dr:debian-hosts # Reemplaza con tu grupo de hosts de Debian/Ubuntu
+  hosts: "{{ update_hosts | default('localhost') }}" # Reemplaza con tu grupo de hosts de Debian/Ubuntu
   become: true # Necesario para ejecutar 'apt update'
 
   tasks:

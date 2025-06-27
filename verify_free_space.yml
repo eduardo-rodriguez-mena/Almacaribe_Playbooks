@@ -1,12 +1,17 @@
 ---
 - name: Obtener disponibilidad de espacio en disco
-  hosts: all # Reemplaza con el nombre de tu grupo de hosts o 'all'
+  hosts: "{{ update_hosts | default('pm-hosts:pm-dr') }}" # Reemplaza con el nombre de tu grupo de hosts o 'all'
   become: false # df -h generalmente no requiere privilegios de sudo, a menos que necesites ver puntos de montaje restringidos
   gather_facts: false # No es necesario recopilar hechos para esta tarea
 
   tasks:
     - name: Ejecutar df -h para ver el espacio en disco
-      ansible.builtin.shell: df -h | grep /dev/sda3
+      ansible.builtin.shell: |
+        set -euo pipefail
+        df -h | grep /dev/sda3
+      args:
+        chdir: /root # Cambia al directorio deseado si es necesario
+        executable: /bin/bash # Asegúrate de que se ejecute en bash
       register: disk_space_output
       changed_when: false # Esta tarea solo consulta información, no cambia el sistema
 
