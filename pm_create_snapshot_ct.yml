@@ -33,7 +33,7 @@
         else
           echo "Saltando línea no válida en la lista de CTs: {{ item }}"
         fi
-      loop: "{{ ct_list_output.stdout_lines[1:] | trim | regex_replace('\\s+', ' ')}}"
+      loop: "{{ ct_list_output.stdout_lines[1:] | trim | regex_replace('\\s+', ' ') }}"
       loop_control:
         loop_var: item
       when: ct_list_output.stdout_lines | length > 1

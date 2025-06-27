@@ -43,7 +43,7 @@
       register: vm_snapshot_result
       changed_when: "'Creando snapshot' in vm_snapshot_result.stdout"
       failed_when: "'ERROR' in vm_snapshot_result.stderr or 'Error:' in vm_snapshot_result.stderr"
-      when: vm_list_output is defined and vm_list_output | length > 0
+      when: vm_list_output.stdout_lines | length > 1
 
     - name: Mostrar resultados de los snapshots de VMs
       ansible.builtin.debug:
