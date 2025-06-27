@@ -74,3 +74,21 @@
     #     msg: "{{ item }}"
     #   loop: "{{ ct_snapshot_result.results }}"
     #   when: ct_snapshot_result.results is defined
+
+    - name: Send Email
+      community.general.mail:
+        host: mail.almacaribe.online
+        username: notification@almacaribe.online
+        password: b01uqIw14nL4wu5
+        port: 587
+        secure: starttls
+        from: notification@almacaribe.online
+        to: it@almacaribe.online
+        subject: "Snapshots de VMs y CTs eliminados"
+        body: |
+          Los snapshots de las VMs y CTs han sido eliminados correctamente.
+          Detalles:
+          {% for item in ct_snapshot_result.results %}
+          - CTID: {{ item.item }} - Resultado: {{ item.stdout }}
+          {% endfor %}
+      when: ct_snapshot_result is defined and ct_snapshot_result.results | length > 0

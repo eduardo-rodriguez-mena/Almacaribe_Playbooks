@@ -1,0 +1,69 @@
+---
+- name: Tomar snapshots de CTs en nodos Proxmox
+  hosts: vDC1-1
+  gather_facts: false # No necesitamos recopilar hechos para esta tarea
+  become: false      # No necesitamos sudo, ya que nos conectamos como root
+
+  vars:
+    # Definir el nombre del snapshot y la descripción dinámicamente
+    current_datetime: "{{ now(fmt='%Y%m%d_%H%M%S') }}"
+    snapshot_name: "Ansible_snapshot_Temp_Update"
+    snapshot_description: "Snapshot creado por Ansible el {{ now(fmt='%Y-%m-%d %H:%M:%S') }}."
+
+  tasks:
+    - name: Obtener lista de CTs en el nodo actual
+      ansible.builtin.command: pct list
+      register: ct_list_output
+      changed_when: false
+
+    - name: Tomar snapshot de cada CT
+      ansible.builtin.shell: |
+        set -euo pipefail
+        CTID="{{ item.split(' ')[0] }}"
+        CT_STATUS="{{ item.split(' ')[8] }}" # Obtener el estado (columna 3)
+        if [[ "$CTID" =~ ^[0-9]+$ ]]; then
+          # Comprobar si el snapshot ya existe
+          if pct listsnapshot "$CTID" | grep -q "{{ snapshot_name }}"; then
+            echo "El snapshot '{{ snapshot_name }}' ya existe para CT $CTID. Eliminando..."
+            pct delsnapshot "$CTID" "{{ snapshot_name }}"
+          fi
+          echo "Creando snapshot '{{ snapshot_name }}' para CT $CTID..."
+          pct snapshot "$CTID" "{{ snapshot_name }}" --description "{{ snapshot_description }} - CT $CTID"
+          echo "Snapshot exitoso para CT $CTID."
+        else
+          echo "Saltando línea no válida en la lista de CTs: {{ item }}"
+        fi
+      loop: "{{ ct_list_output.stdout_lines[1:] }}"
+      loop_control:
+        loop_var: item
+      when: ct_list_output.stdout_lines | length > 1
+      args:
+        chdir: /root
+        executable: /bin/bash
+      register: ct_snapshot_result
+      changed_when: "'Creando snapshot' in ct_snapshot_result.stdout"
+      failed_when: "'ERROR' in ct_snapshot_result.stderr or 'Error:' in ct_snapshot_result.stderr"
+
+    - name: Mostrar resultados de los snapshots de CTs
+      ansible.builtin.debug:
+        msg: "{{ item }}"
+      loop: "{{ ct_snapshot_result.results }}"
+      when: ct_snapshot_result.results is defined
+
+    # - name: Send Email
+    #   community.general.mail:
+    #     host: mail.almacaribe.online
+    #     username: notification@almacaribe.online
+    #     password: b01uqIw14nL4wu5
+    #     port: 587
+    #     secure: starttls
+    #     from: notification@almacaribe.online
+    #     to: it@almacaribe.online
+    #     subject: "Snapshots de CTs creados"
+    #     body: |
+    #       Los snapshots de las VMs y CTs han sido creados correctamente.
+    #       Detalles:
+    #       {% for item in ct_snapshot_result.results %}
+    #       - CTID: {{ item.item }} - Resultado: {{ item.stdout }}
+    #       {% endfor %}
+    #   when: ct_snapshot_result is defined and ct_snapshot_result.results | length > 0
